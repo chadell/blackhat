@@ -24,7 +24,7 @@ def usage():
     print "-l --listen                  - listen on [host]:[port] for incoming connection"
     print "-e --execute=file_to_run     - execute the given file upon receiving a connection"
     print "-c --command                 - initialise a command shell"
-    print "-u --upload=destination      - upon receiving connection upload a file and write to [destination]"
+    print "-u --upload-destination      - upon receiving connection upload a file and write to [destination]"
     print
     print "Examples: "
     print "bhpnet.py -t 192.168.0.1 -p 5555 -l -c"
@@ -33,7 +33,9 @@ def usage():
     print "echo 'ABCDEFGHI' | ./bhpnet.py -t 192.168.11.12 -p 135"
     sys.exit(0)
 
+
 def client_sender(buffer):
+
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
@@ -53,7 +55,7 @@ def client_sender(buffer):
                 if recv_len < 4096:
                     break
 
-            print response
+            print response,
 
             # wait for more input
             buffer = raw_input("")
@@ -61,10 +63,13 @@ def client_sender(buffer):
 
             # send it off
             client.send(buffer)
+
     except:
         print "[*] Exception! Exiting."
+
         # tear down the connection
         client.close()
+
 
 def server_loop():
     global target
@@ -81,7 +86,7 @@ def server_loop():
         client_socket, addr = server.accept()
 
         # spin off a thread to handle our new client
-        client_thread = threading.Thread(target=client_handelr, args=(client_socket,))
+        client_thread = threading.Thread(target=client_handler, args=(client_socket,))
         client_thread.start()
 
 
@@ -144,6 +149,7 @@ def client_handler(client_socket):
             while "\n" not in cmd_buffer:
                 cmd_buffer += client_socket.recv(1024)
 
+            print "Executing: {}".format(cmd_buffer)
             # send back to command output
             response = run_command(cmd_buffer)
 
@@ -166,8 +172,13 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hle:t:p:cu:",
                                    ["help", "listen", "execute",
-                                    "target", "port", "command",
+                                  "target", "port", "command",
                                     "upload"])
+        print "opts: "
+        print opts
+        print "args: "
+        print args
+
     except getopt.GetoptError as err:
         print str(err)
         usage()
